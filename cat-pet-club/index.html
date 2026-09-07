@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Cat Pet Club - a tiny cozy cat clicker game." />
+  <title>Cat Pet Club 🐾</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            cream: "#FFF7F2",
+            coral: "#FF9B9B",
+            peach: "#FFD6A5",
+            mint: "#B8E0D2",
+            ink: "#3D3542"
+          },
+          fontFamily: {
+            nunito: ["Nunito", "sans-serif"]
+          },
+          keyframes: {
+            floaty: {
+              "0%, 100%": { transform: "translateY(0)" },
+              "50%": { transform: "translateY(-7px)" }
+            },
+            breathe: {
+              "0%, 100%": { transform: "scaleY(1)" },
+              "50%": { transform: "scaleY(0.985)" }
+            },
+            petBounce: {
+              "0%": { transform: "translateY(0) scale(1) rotate(0deg)" },
+              "25%": { transform: "translateY(-13px) scale(1.04, 0.96) rotate(-2deg)" },
+              "50%": { transform: "translateY(3px) scale(0.97, 1.03) rotate(2deg)" },
+              "75%": { transform: "translateY(-5px) scale(1.02, 0.98) rotate(-1deg)" },
+              "100%": { transform: "translateY(0) scale(1) rotate(0deg)" }
+            },
+            counterPop: {
+              "0%": { transform: "scale(1)" },
+              "45%": { transform: "scale(1.16)" },
+              "100%": { transform: "scale(1)" }
+            },
+            reactionIn: {
+              "0%": { opacity: "0", transform: "translateY(8px) scale(.96)" },
+              "100%": { opacity: "1", transform: "translateY(0) scale(1)" }
+            },
+            floatUp: {
+              "0%": { opacity: "0", transform: "translate(-50%, 8px) scale(.8)" },
+              "15%": { opacity: "1", transform: "translate(-50%, 0) scale(1)" },
+              "100%": { opacity: "0", transform: "translate(-50%, -76px) scale(1.08)" }
+            },
+            sparkle: {
+              "0%": { opacity: "0", transform: "translate(0, 0) scale(.4) rotate(0deg)" },
+              "20%": { opacity: "1" },
+              "100%": { opacity: "0", transform: "translate(var(--dx), var(--dy)) scale(1) rotate(120deg)" }
+            },
+            rarePop: {
+              "0%": { opacity: "0", transform: "translateY(10px) scale(.85)" },
+              "45%": { opacity: "1", transform: "translateY(-2px) scale(1.04)" },
+              "100%": { opacity: "1", transform: "translateY(0) scale(1)" }
+            }
+          },
+          animation: {
+            floaty: "floaty 3.2s ease-in-out infinite",
+            breathe: "breathe 3.2s ease-in-out infinite",
+            petBounce: "petBounce .48s cubic-bezier(.2,.8,.2,1)",
+            counterPop: "counterPop .32s ease-out",
+            reactionIn: "reactionIn .28s ease-out",
+            floatUp: "floatUp .9s ease-out forwards",
+            sparkle: "sparkle .9s ease-out forwards",
+            rarePop: "rarePop .45s cubic-bezier(.2,.8,.2,1)"
+          }
+        }
+      }
+    };
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap"
+    rel="stylesheet"
+  />
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: "Nunito", sans-serif;
+      background:
+        radial-gradient(circle at 12% 15%, rgba(255, 214, 165, .34), transparent 24%),
+        radial-gradient(circle at 88% 20%, rgba(184, 224, 210, .34), transparent 25%),
+        #FFF7F2;
+      color: #3D3542;
+      min-height: 100vh;
+    }
+
+    .cat-hit-area {
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      user-select: none;
+      cursor: pointer;
+    }
+
+    .cat-hit-area:focus-visible {
+      outline: 4px solid rgba(255, 155, 155, .55);
+      outline-offset: 10px;
+      border-radius: 999px;
+    }
+
+    .cat-idle {
+      animation: floaty 3.2s ease-in-out infinite;
+    }
+
+    .cat-breathe {
+      transform-origin: center bottom;
+      animation: breathe 3.2s ease-in-out infinite;
+    }
+
+    .cat-petting {
+      animation: petBounce .48s cubic-bezier(.2,.8,.2,1) !important;
+    }
+
+    .eye {
+      transition: opacity .16s ease, transform .16s ease;
+      transform-origin: center;
+    }
+
+    .expression-sleepy .eye {
+      opacity: 0;
+    }
+
+    .expression-sleepy .sleep-eye {
+      opacity: 1;
+    }
+
+    .sleep-eye {
+      opacity: 0;
+      transition: opacity .16s ease;
+    }
+
+    .expression-love .heart-eye {
+      opacity: 1;
+    }
+
+    .heart-eye {
+      opacity: 0;
+      transition: opacity .16s ease;
+    }
+
+    .expression-angry .brow {
+      opacity: 1;
+    }
+
+    .brow {
+      opacity: 0;
+      transition: opacity .16s ease;
+    }
+
+    .expression-surprised .mouth-normal {
+      opacity: 0;
+    }
+
+    .expression-surprised .mouth-surprised {
+      opacity: 1;
+    }
+
+    .mouth-surprised {
+      opacity: 0;
+      transition: opacity .16s ease;
+    }
+
+    .expression-sad .mouth-normal {
+      transform: translateY(3px);
+    }
+
+    .expression-excited .mouth-normal {
+      transform: scale(1.1);
+    }
+
+    .rare-mode .cat-sticker {
+      filter: drop-shadow(0 12px 18px rgba(255, 155, 155, .25));
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+      }
+    }
+  </style>
+</head>
+
+<body class="min-h-screen overflow-x-hidden">
+  <main class="mx-auto flex min-h-screen w-full max-w-4xl flex-col px-5 py-8 sm:px-8 sm:py-10">
+    <header class="text-center">
+      <div class="mb-2 inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-bold shadow-sm ring-1 ring-black/5">
+        <span aria-hidden="true">🐾</span>
+        <span>CAT PET CLUB</span>
+      </div>
+      <h1 class="mt-3 text-4xl font-black tracking-tight sm:text-5xl">
+        Give the cat some pets!
+      </h1>
+      <p class="mx-auto mt-3 max-w-md text-base font-medium text-ink/60 sm:text-lg">
+        Every pet earns a reaction. Who knows what this little fluffball will say next?
+      </p>
+    </header>
+
+    <section class="flex flex-1 flex-col items-center justify-center py-8 sm:py-10" aria-label="Cat petting game">
+      <div id="gameArea" class="relative flex w-full flex-col items-center">
+        <div id="sparkles" class="pointer-events-none absolute inset-x-0 top-0 z-20 mx-auto h-72 max-w-lg" aria-hidden="true"></div>
+
+        <button
+          id="catButton"
+          type="button"
+          class="cat-hit-area group relative z-10 h-64 w-64 sm:h-72 sm:w-72"
+          aria-label="Pet the cat"
+          title="Pet the cat"
+        >
+          <span class="cat-idle block h-full w-full">
+            <span id="catIllustration" class="cat-breathe block h-full w-full transition-transform duration-200">
+              <svg class="cat-sticker mx-auto h-full w-full overflow-visible" viewBox="0 0 320 320" role="img" aria-label="Cute cat mascot">
+                <defs>
+                  <filter id="softShadow" x="-30%" y="-30%" width="160%" height="170%">
+                    <feDropShadow dx="0" dy="10" stdDeviation="8" flood-color="#3D3542" flood-opacity=".13"/>
+                  </filter>
+                </defs>
+
+                <!-- Tail -->
+                <path d="M235 236 C285 260, 288 214, 263 201 C250 194, 239 204, 245 216"
+                      fill="none" stroke="#F5B978" stroke-width="18" stroke-linecap="round"/>
+
+                <!-- Body -->
+                <ellipse cx="160" cy="225" rx="78" ry="68" fill="#FFD6A5" filter="url(#softShadow)"/>
+
+                <!-- Paws -->
+                <ellipse cx="117" cy="271" rx="30" ry="18" fill="#FFE4C3"/>
+                <ellipse cx="203" cy="271" rx="30" ry="18" fill="#FFE4C3"/>
+                <path d="M104 270 q6 -8 12 0 M116 270 q6 -8 12 0" fill="none" stroke="#D99A65" stroke-width="3" stroke-linecap="round"/>
+                <path d="M190 270 q6 -8 12 0 M202 270 q6 -8 12 0" fill="none" stroke="#D99A65" stroke-width="3" stroke-linecap="round"/>
+
+                <!-- Head -->
+                <path d="M76 132 L86 61 Q88 48 101 57 L130 77 Q160 66 190 77 L219 57 Q232 48 234 61 L244 132
+                         Q250 202 160 215 Q70 202 76 132Z"
+                      fill="#FFE0B8" filter="url(#softShadow)"/>
+
+                <!-- Inner ears -->
+                <path d="M91 70 L98 107 L121 83Z" fill="#FFB7B7"/>
+                <path d="M229 70 L222 107 L199 83Z" fill="#FFB7B7"/>
+
+                <!-- Cheeks -->
+                <ellipse cx="107" cy="151" rx="20" ry="12" fill="#FFB8B8" opacity=".52"/>
+                <ellipse cx="213" cy="151" rx="20" ry="12" fill="#FFB8B8" opacity=".52"/>
+
+                <!-- Eyes -->
+                <g class="eye">
+                  <ellipse cx="119" cy="126" rx="9" ry="13" fill="#3D3542"/>
+                  <circle cx="116" cy="122" r="3" fill="#fff"/>
+                </g>
+                <g class="eye">
+                  <ellipse cx="201" cy="126" rx="9" ry="13" fill="#3D3542"/>
+                  <circle cx="198" cy="122" r="3" fill="#fff"/>
+                </g>
+
+                <!-- Heart eyes -->
+                <g class="heart-eye" fill="#FF7F91">
+                  <path d="M111 124 C104 116 93 122 98 131 L111 143 L124 131 C129 122 118 116 111 124Z"/>
+                  <path d="M209 124 C202 116 191 122 196 131 L209 143 L222 131 C227 122 216 116 209 124Z"/>
+                </g>
+
+                <!-- Sleepy eyes -->
+                <g class="sleep-eye" fill="none" stroke="#3D3542" stroke-width="5" stroke-linecap="round">
+                  <path d="M108 130 Q119 138 130 130"/>
+                  <path d="M190 130 Q201 138 212 130"/>
+                </g>
+
+                <!-- Angry brows -->
+                <g class="brow" fill="none" stroke="#3D3542" stroke-width="6" stroke-linecap="round">
+                  <path d="M106 111 L130 119"/>
+                  <path d="M214 111 L190 119"/>
+                </g>
+
+                <!-- Nose -->
+                <path d="M153 143 Q160 137 167 143 Q160 151 153 143Z" fill="#E98C9B"/>
+
+                <!-- Normal mouth -->
+                <path class="mouth-normal" d="M160 149 Q155 161 146 158 M160 149 Q165 161 174 158"
+                      fill="none" stroke="#3D3542" stroke-width="4" stroke-linecap="round"/>
+
+                <!-- Surprised mouth -->
+                <ellipse class="mouth-surprised" cx="160" cy="160" rx="9" ry="13" fill="#3D3542"/>
+                <ellipse class="mouth-surprised" cx="160" cy="157" rx="4" ry="5" fill="#FFB7B7"/>
+
+                <!-- Whiskers -->
+                <g fill="none" stroke="#9B7C68" stroke-width="3" stroke-linecap="round" opacity=".75">
+                  <path d="M104 151 L67 143"/>
+                  <path d="M104 158 L62 159"/>
+                  <path d="M104 165 L69 176"/>
+                  <path d="M216 151 L253 143"/>
+                  <path d="M216 158 L258 159"/>
+                  <path d="M216 165 L251 176"/>
+                </g>
+
+                <!-- Tiny belly mark -->
+                <path d="M151 232 Q160 240 169 232" fill="none" stroke="#E5AC78" stroke-width="4" stroke-linecap="round"/>
+              </svg>
+            </span>
+          </span>
+        </button>
+
+        <div id="reactionBubble" class="mt-1 min-h-[72px] px-5 text-center" aria-live="polite" aria-atomic="true">
+          <div id="reactionText" class="inline-flex min-h-[48px] items-center rounded-2xl bg-white px-5 py-3 text-lg font-bold shadow-sm ring-1 ring-black/5">
+            <span>mrrp!</span>
+          </div>
+          <div id="rareLabel" class="mt-2 hidden text-sm font-black text-coral"></div>
+        </div>
+
+        <div class="mt-5 flex items-center justify-center">
+          <div
+            id="counter"
+            class="rounded-full bg-white px-6 py-3 text-lg font-extrabold shadow-sm ring-1 ring-black/5"
+            aria-live="polite"
+          >
+            🐾 <span id="petCount">0</span> pets
+          </div>
+        </div>
+
+        <div class="relative mt-7">
+          <button
+            id="petButton"
+            type="button"
+            class="rounded-full bg-coral px-9 py-4 text-lg font-black text-ink shadow-[0_8px_0_0_rgba(221,117,117,.22)] transition duration-150 hover:scale-[1.035] hover:bg-[#ff8f91] active:translate-y-1 active:scale-[.97] active:shadow-[0_4px_0_0_rgba(221,117,117,.22)] focus:outline-none focus-visible:ring-4 focus-visible:ring-coral/35"
+          >
+            PET THE CAT 🐾
+          </button>
+        </div>
+
+        <div class="mt-7 flex min-h-10 items-center justify-center">
+          <div id="status" class="rounded-full bg-mint/60 px-4 py-2 text-sm font-bold text-ink/75">
+            The cat is waiting for pets...
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="pb-2 text-center text-sm font-semibold text-ink/45">
+      Tiny game. Big purrs. 🐱
+    </footer>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
